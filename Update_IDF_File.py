@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 25 21:06:49 2022
-
 @author: kphillip
 """
 import subprocess
@@ -10,9 +8,9 @@ import os
 
 
 def write_batch_file(filename,lines):
-    """Writes a .txt of .bat file when a list of strings
+    """Writes a .txt or .bat file
     
-    intput filename: Filname with extenstion type. for example IDF_update.bat or new.idf
+    intput filename: Filname with extenstion type i.e. IDF_update.bat or new.idf
     intput lines: List of Lines that will be written to the .bat file
     output: None
     """
