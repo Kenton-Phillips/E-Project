@@ -9,13 +9,15 @@ import sys
 import os
 
 
-def write_batch_file(_lines):
+def write_batch_file(filename,lines):
+    """Writes a .txt of .bat file when a list of strings
+    
+    intput filename: Filname with extenstion type. for example IDF_update.bat or new.idf
+    intput lines: List of Lines that will be written to the .bat file
+    output: None
     """
-    intput _lines: List of Lines that will be written to the .bat file
-    output: creates .bat at current directory
-    """
-    with open('IDF_update.bat', 'w') as f:
-        for line in _lines:
+    with open(filename, 'w') as f:
+        for line in lines:
             f.write(line+'\n')
 
 def update_idf_file(ep_path, idf_file, start_ver, end_ver):
@@ -72,120 +74,72 @@ def update_idf_file(ep_path, idf_file, start_ver, end_ver):
         script.append(script_line + ' "' + idf_file_directory + idf_file_name + '"')    
     
         # write lines to file
-    write_batch_file(script)
+        
+    #'IDF_update.bat    
+    write_batch_file("IDF_update.bat",script)
     print("running update")
     #run batch (.bat) file
     subprocess.run([r"C:\Users\kphillip\.spyder-py3\IDF_update.bat"], shell=True) 
     print("complete")
 
-
-
-
-
-# def _run_idf_windows(idf_file_path, epw_file_path=None, expand_objects=True, silent=False):
-#     """Run an IDF file through energyplus on a Windows-based operating system.
-#     A batch file will be used to run the simulation.
-#     Args:
-#         idf_file_path: The full path to an IDF file.
-#         epw_file_path: The full path to an EPW file. Note that inputting None here
-#             is only appropriate when the simulation is just for design days and has
-#             no weather file run period. (Default: None).
-#         expand_objects: If True, the IDF run will include the expansion of any
-#             HVAC Template objects in the file before beginning the simulation.
-#             This is a necessary step whenever there are HVAC Template objects in
-#             the IDF but it is unnecessary extra time when they are not
-#             present. (Default: True).
-#         silent: Boolean to note whether the simulation should be run silently
-#             (without the batch window). If so, the simulation will be run using
-#             subprocess with shell set to True. (Default: False).
-#     Returns:
-#         Path to the folder out of which the simulation was run.
-#     """
-#     # check and prepare the input files
-#     ###directory = prepare_idf_for_simulation(idf_file_path, epw_file_path)
+def run_idf_file(idf_file, epw_file):
+    """ Runs a E+ using the idf and epw files
     
-#     idf_file_directory, idf_file_name = os.path.split(idf_file_path)
-#     idf_file_directory += "\\"
-    
-    
-    
-    
-    
-#     if not silent:  # write a batch file; useful for re-running the sim
-#         # generate various arguments to pass to the energyplus command
-#         epw_str = '-w "{}"'.format(os.path.abspath(epw_file_path)) \
-#             if epw_file_path is not None else ''
+    input idf_file: Energy Plus Input Data File (idf) 
+    input epw_file: Enegy Plus Westher File 
+    output: none
+    """
         
+    # current hard set
+    #NOTE - need to set to user E+ version
+    ep_idd_path = "C:\EnergyPlusV9-1-0\Energy+.idd"
+    ep_exe_path = "C:\EnergyPlusV9-1-0\energyplus.exe"
+    
+    idf_file_directory, idf_file_name = os.path.split(idf_file)
+    idf_file_directory += "\\"
+    
+    #make new folder
+    newpath = idf_file_directory + "run"
+    if not os.path.exists(newpath):
+        os.makedirs(newpath)
         
-#         idd_str = '-i "{}"'.format(folders.energyplus_idd_path)
-#         expand_str = ' -x' if expand_objects else ''
-#         working_drive = directory[:2]
-#         # write the batch file
-#         batch = '{}\ncd "{}"\n"{}" {} {}{}'.format(
-#             working_drive, directory, folders.energyplus_exe, epw_str,
-#             idd_str, expand_str)
-#         batch_file = os.path.join(directory, 'in.bat')
-#         write_to_file(batch_file, batch, True)
-#         if all(ord(c) < 128 for c in batch):  # just run the batch file as it is
-#             os.system('"{}"'.format(batch_file))  # run the batch file
-#             return directory
-#     # given .bat file restrictions with non-ASCII characters, run the sim with subprocess
-#     cmds = [folders.energyplus_exe, '-i', folders.energyplus_idd_path]
-#     if epw_file_path is not None:
-#         cmds.append('-w')
-#         cmds.append(os.path.abspath(epw_file_path))
-#     if expand_objects:
-#         cmds.append('-x')
-#     process = subprocess.Popen(cmds, cwd=directory, shell=silent)
-#     process.communicate()  # prevents the script from running before command is done
-
-#     return directory
+    
+    script = []
+    script.append('cd ' + idf_file_directory)
+    script.append('copy ' + idf_file_name + " " + "run\\in.idf") 
+    script.append('cd ' + idf_file_directory + "run")
+    script.append("{} -w {} -i {} -x".format(ep_exe_path,epw_file, ep_idd_path))
+    
+    with open(idf_file_directory + "run\in.bat", 'w') as f:
+        for line in script:
+            f.write(line+'\n')
+    
+    print("running update")
+    #run batch (.bat) file
+    batch_file2 = idf_file_directory + "run\in.bat"
+    #os.system('"{}"'.format(batch_file2))
+    subprocess.run(batch_file2, shell=True) 
+    print("complete")
 
 
+if __name__ == '__main__':
 
-#run test code
-ep_path = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
-ep_idd_path = "C:\EnergyPlusV9-1-0\Energy+.idd"
-idf_file = r"C:\Users\kphillip\Desktop\New folder\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
-start_ver = "7-2-0"
-end_ver = "9-1-0"
-epw_path = r"C:\DIVA\WeatherData\USA_CO_Denver.Intl.AP.725650_TMY3.epw"
-
-#update_idf_file(ep_path_test, idf_file_test, start_ver_test, end_ver_test)
-
+    #Inputs for test rusn
+    ep_path = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
+    idf_file = r"C:\Users\kphillip\Desktop\New folder\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
+    start_ver = "7-2-0"
+    end_ver = "9-1-0"
+    epw_file = r"C:\DIVA\WeatherData\USA_CO_Denver.Intl.AP.725650_TMY3.epw"
+    
+    
+    #Update IDF File Version from v72 to v91
+    update_idf_file(ep_path, idf_file, start_ver, end_ver)
+    
+    #Run IDF File with selected epw file
+    run_idf_file(idf_file, epw_file)
 
 
 
-idf_file_directory, idf_file_name = os.path.split(idf_file)
-idf_file_directory += "\\"
-
-#make new folder
-newpath = idf_file_directory + "run"
-if not os.path.exists(newpath):
-    os.makedirs(newpath)
 
 
-
-script = []
-script.append('cd ' + idf_file_directory)
-script.append('copy ' + idf_file_name + " " + "run\\in.idf") 
-script.append('cd ' + idf_file_directory + "run")
-script.append("C:\EnergyPlusV9-1-0\energyplus.exe -w {} -i {} -x".format(epw_path, ep_idd_path))
-
-with open(idf_file_directory + "run\in.bat", 'w') as f:
-    for line in script:
-        f.write(line+'\n')
-
-print("running update")
-#run batch (.bat) file
-batch_file2 = idf_file_directory + "run\in.bat"
-os.system('"{}"'.format(batch_file2))
-#subprocess.run([idf_file_directory+"\\run.in.bat"], shell=True) 
-print("complete")
-
-
-
-# C:
-# cd "C:\Users\kphillip\Desktop\New folder\run"
-# "C:\EnergyPlusV9-1-0\energyplus.exe" -w "C:\DIVA\WeatherData\USA_CO_Denver.Intl.AP.725650_TMY3.epw" -i "C:\EnergyPlusV9-1-0\Energy+.idd" -x
 
