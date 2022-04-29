@@ -120,6 +120,26 @@ def run_idf_file(idf_file, epw_file):
     print("complete")
 
 
+def get_climate_zone(stat_file):
+    """ get climate zone for stat file
+    
+    input stat_file: Statistics Report of the annual weather data .STAT file
+    output: string - ASHRAE Climate Zone 
+    """   
+    with open(stat_file, 'r') as f:
+           lines = f.readlines()
+           
+    for line in lines:
+        if "ASHRAE Standard 196-2006 Climate Zone" in line:
+            x = line.index('\"')
+            climate_zone = line[x+1:x+3]
+    
+    return climate_zone
+          
+
+
+
+
 if __name__ == '__main__':
 
     #Inputs for test rusn
