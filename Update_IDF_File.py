@@ -5,6 +5,70 @@
 import subprocess
 import sys
 import os
+import webbrowser
+
+def get_climate_zone(stat_file):
+    """ get climate zone for stat file
+    
+    input stat_file: Statistics Report of the annual weather data .STAT file
+    output: string - ASHRAE Climate Zone 
+    """   
+    with open(stat_file, 'r') as f:
+           lines = f.readlines()
+           
+    for line in lines:
+        if "ASHRAE Standard 196-2006 Climate Zone" in line:
+            x = line.index('\"')
+            climate_zone = line[x+1:x+3]
+            break
+    
+    return climate_zone
+
+def open_EPW_Weather_url():
+    url = 'https://energyplus.net/weather'
+    webbrowser.open(url, new=2)
+    
+
+
+
+def run_idf_file(idf_file, epw_file):
+    """ Runs a E+ using the idf and epw files
+    
+    input idf_file: Energy Plus Input Data File (idf) 
+    input epw_file: Enegy Plus Westher File 
+    output: none
+    """
+        
+    # current hard set
+    #NOTE - need to set to user E+ version
+    ep_idd_path = "C:\EnergyPlusV9-1-0\Energy+.idd"
+    ep_exe_path = "C:\EnergyPlusV9-1-0\energyplus.exe"
+    
+    idf_file_directory, idf_file_name = os.path.split(idf_file)
+    idf_file_directory += "\\"
+    
+    #make new folder
+    newpath = idf_file_directory + "run"
+    if not os.path.exists(newpath):
+        os.makedirs(newpath)
+        
+    
+    script = []
+    script.append('cd ' + idf_file_directory)
+    script.append('copy ' + idf_file_name + " " + "run\\in.idf") 
+    script.append('cd ' + idf_file_directory + "run")
+    script.append("{} -w {} -i {} -x".format(ep_exe_path,epw_file, ep_idd_path))
+    
+    with open(idf_file_directory + "run\in.bat", 'w') as f:
+        for line in script:
+            f.write(line+'\n')
+    
+    print("running update")
+    #run batch (.bat) file
+    batch_file2 = idf_file_directory + "run\in.bat"
+    #os.system('"{}"'.format(batch_file2))
+    subprocess.run(batch_file2, shell=True) 
+    print("complete")
 
 
 def write_batch_file(filename,lines):
@@ -17,6 +81,7 @@ def write_batch_file(filename,lines):
     with open(filename, 'w') as f:
         for line in lines:
             f.write(line+'\n')
+
 
 def update_idf_file(ep_path, idf_file, start_ver, end_ver):
     """Updates the given IDF to the goal version.
@@ -80,83 +145,42 @@ def update_idf_file(ep_path, idf_file, start_ver, end_ver):
     subprocess.run([r"C:\Users\kphillip\.spyder-py3\IDF_update.bat"], shell=True) 
     print("complete")
 
-def run_idf_file(idf_file, epw_file):
-    """ Runs a E+ using the idf and epw files
-    
-    input idf_file: Energy Plus Input Data File (idf) 
-    input epw_file: Enegy Plus Westher File 
-    output: none
-    """
-        
-    # current hard set
-    #NOTE - need to set to user E+ version
-    ep_idd_path = "C:\EnergyPlusV9-1-0\Energy+.idd"
-    ep_exe_path = "C:\EnergyPlusV9-1-0\energyplus.exe"
-    
-    idf_file_directory, idf_file_name = os.path.split(idf_file)
-    idf_file_directory += "\\"
-    
-    #make new folder
-    newpath = idf_file_directory + "run"
-    if not os.path.exists(newpath):
-        os.makedirs(newpath)
-        
-    
-    script = []
-    script.append('cd ' + idf_file_directory)
-    script.append('copy ' + idf_file_name + " " + "run\\in.idf") 
-    script.append('cd ' + idf_file_directory + "run")
-    script.append("{} -w {} -i {} -x".format(ep_exe_path,epw_file, ep_idd_path))
-    
-    with open(idf_file_directory + "run\in.bat", 'w') as f:
-        for line in script:
-            f.write(line+'\n')
-    
-    print("running update")
-    #run batch (.bat) file
-    batch_file2 = idf_file_directory + "run\in.bat"
-    #os.system('"{}"'.format(batch_file2))
-    subprocess.run(batch_file2, shell=True) 
-    print("complete")
 
 
-def get_climate_zone(stat_file):
-    """ get climate zone for stat file
-    
-    input stat_file: Statistics Report of the annual weather data .STAT file
-    output: string - ASHRAE Climate Zone 
-    """   
-    with open(stat_file, 'r') as f:
-           lines = f.readlines()
-           
-    for line in lines:
-        if "ASHRAE Standard 196-2006 Climate Zone" in line:
-            x = line.index('\"')
-            climate_zone = line[x+1:x+3]
-    
-    return climate_zone
           
 
 
-
-
-if __name__ == '__main__':
-
+if __name__ == "__main__":
+    
+    print("start")
+    
     #Inputs for test rusn
     ep_path = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
     idf_file = r"C:\Users\kphillip\Desktop\New folder\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
     start_ver = "7-2-0"
     end_ver = "9-1-0"
     epw_file = r"C:\DIVA\WeatherData\USA_CO_Denver.Intl.AP.725650_TMY3.epw"
+    get_weather_files = False
+    #stat_file = "add file path"
+    
+   
+    #Get EPW and STAT file
+    if get_weather_files == True:
+        open_EPW_Weather_url()
+    
+    # #Lookup best match
     
     
-    #Update IDF File Version from v72 to v91
-    update_idf_file(ep_path, idf_file, start_ver, end_ver)
     
-    #Run IDF File with selected epw file
-    run_idf_file(idf_file, epw_file)
+    
+    
+    # #Update IDF File Version from v72 to v91
+    # update_idf_file(ep_path, idf_file, start_ver, end_ver)
+    
+    # #Run IDF File with selected epw file
+    # run_idf_file(idf_file, epw_file)
 
-
+    print("end")
 
 
 
