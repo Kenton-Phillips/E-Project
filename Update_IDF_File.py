@@ -54,10 +54,10 @@ def run_idf_file(idf_file, epw_file):
         
     
     script = []
-    script.append('cd ' + idf_file_directory)
-    script.append('copy ' + idf_file_name + " " + "run\\in.idf") 
-    script.append('cd ' + idf_file_directory + "run")
-    script.append("{} -w {} -i {} -x".format(ep_exe_path,epw_file, ep_idd_path))
+    script.append('cd ' + '"' + idf_file_directory + '"')
+    script.append('copy ' + '"' + idf_file_name + '" ' + "run\\in.idf") 
+    script.append('cd ' + '"' + idf_file_directory + "run" + '"')
+    script.append('"{}" -w "{}" -i "{}: -x'.format(ep_exe_path,epw_file, ep_idd_path))
     
     with open(idf_file_directory + "run\in.bat", 'w') as f:
         for line in script:
@@ -66,8 +66,9 @@ def run_idf_file(idf_file, epw_file):
     print("running update")
     #run batch (.bat) file
     batch_file2 = idf_file_directory + "run\in.bat"
-    #os.system('"{}"'.format(batch_file2))
-    subprocess.run(batch_file2, shell=True) 
+    #os.startfile('"{}"'.format(batch_file2))
+    os.system('"{}"'.format(batch_file2))
+    #subprocess.run(batch_file2, shell=True) 
     print("complete")
 
 
@@ -78,6 +79,7 @@ def write_batch_file(filename,lines):
     intput lines: List of Lines that will be written to the .bat file
     output: None
     """
+    print(filename)
     with open(filename, 'w') as f:
         for line in lines:
             f.write(line+'\n')
@@ -96,6 +98,7 @@ def update_idf_file(ep_path, idf_file, start_ver, end_ver):
     idf_file_directory, idf_file_name = os.path.split(idf_file)
     idf_file_directory += "\\"
     
+   
     #NOTE: When new EnergyPlus versions come out, add to front of list
     ep_versions = [
         "9-1-0",
@@ -136,13 +139,14 @@ def update_idf_file(ep_path, idf_file, start_ver, end_ver):
         script_line = "Transition-V{}-to-V{}".format(ep_versions[i],ep_versions[i+1])
         script.append(script_line + ' "' + idf_file_directory + idf_file_name + '"')    
     
-        # write lines to file
-        
-    #'IDF_update.bat    
-    write_batch_file("IDF_update.bat",script)
+    # write lines to file
+    write_batch_file(idf_file_directory + "IDF_update.bat",script)
     print("running update")
     #run batch (.bat) file
-    subprocess.run([r"C:\Users\kphillip\.spyder-py3\IDF_update.bat"], shell=True) 
+    #subprocess.run(["IDF_update.bat"], shell=True) 
+    os.system('"{}"'.format(idf_file_directory + "IDF_update.bat"))
+    #os.startfile(idf_file_directory + "IDF_update.bat")
+    #os.system("start /wait cmd /c {}".format(idf_file_directory + "IDF_update.bat"))
     print("complete")
 
 
@@ -155,11 +159,11 @@ if __name__ == "__main__":
     print("start")
     
     #Inputs for test rusn
-    ep_path = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
-    idf_file = r"C:\Users\kphillip\Desktop\New folder\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
-    start_ver = "7-2-0"
-    end_ver = "9-1-0"
-    epw_file = r"C:\DIVA\WeatherData\USA_CO_Denver.Intl.AP.725650_TMY3.epw"
+    ep_path_test = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
+    idf_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\ASHRAE901_OfficeMedium_STD2016_NewYork.idf"
+    start_ver_test = "9-0-0"
+    end_ver_test = "9-1-0"
+    epw_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\USA_MD_Baltimore-Washington.Intl.AP.724060_TMY3.epw"
     get_weather_files = False
     #stat_file = "add file path"
     
@@ -170,18 +174,15 @@ if __name__ == "__main__":
     
     # #Lookup best match
     
+       
+    #Update IDF File Version from v72 to v91
+    print("Updating IDF File")
+    update_idf_file(ep_path_test, idf_file_test, start_ver_test, end_ver_test)
+    print("Updating IDF File - Complete")
     
-    
-    
-    
-    # #Update IDF File Version from v72 to v91
-    # update_idf_file(ep_path, idf_file, start_ver, end_ver)
-    
-    # #Run IDF File with selected epw file
-    # run_idf_file(idf_file, epw_file)
-
+    #Run IDF File with selected epw file
+    print("running IDF File")
+    run_idf_file(idf_file_test, epw_file_test)
+    print("running IDF File - complete")
     print("end")
-
-
-
 
