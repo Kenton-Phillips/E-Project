@@ -7,6 +7,30 @@ import sys
 import os
 import webbrowser
 
+
+
+def check_idf_ep_version(idf_file):
+    """ get ep version from idf file
+    
+    input idf_file: file path for Energy Plus run file 
+    output: string for EP version 
+    """   
+    with open(idf_file, 'r') as f:
+           lines = f.readlines()
+           
+    for line in lines:
+        if "Version," in line:
+            x = line.index(',')
+            ep_version = line[x+1:len(line)-2]
+            break
+    
+    #Format ep_version for idf update function 
+    ep_version = ep_version.replace(".","-") + "-0"
+    
+    
+    return ep_version
+
+
 def get_climate_zone(stat_file):
     """ get climate zone for stat file
     
@@ -24,12 +48,11 @@ def get_climate_zone(stat_file):
     
     return climate_zone
 
+
 def open_EPW_Weather_url():
     url = 'https://energyplus.net/weather'
     webbrowser.open(url, new=2)
     
-
-
 
 def run_idf_file(idf_file, epw_file):
     """ Runs a E+ using the idf and epw files
@@ -70,19 +93,6 @@ def run_idf_file(idf_file, epw_file):
     os.system('"{}"'.format(batch_file2))
     #subprocess.run(batch_file2, shell=True) 
     print("complete")
-
-
-def write_batch_file(filename,lines):
-    """Writes a .txt or .bat file
-    
-    intput filename: Filname with extenstion type i.e. IDF_update.bat or new.idf
-    intput lines: List of Lines that will be written to the .bat file
-    output: None
-    """
-    print(filename)
-    with open(filename, 'w') as f:
-        for line in lines:
-            f.write(line+'\n')
 
 
 def update_idf_file(ep_path, idf_file, start_ver, end_ver):
@@ -150,8 +160,18 @@ def update_idf_file(ep_path, idf_file, start_ver, end_ver):
     print("complete")
 
 
-
-          
+def write_batch_file(filename,lines):
+    """Writes a .txt or .bat file
+    
+    intput filename: Filname with extenstion type i.e. IDF_update.bat or new.idf
+    intput lines: List of Lines that will be written to the .bat file
+    output: None
+    """
+    print(filename)
+    with open(filename, 'w') as f:
+        for line in lines:
+            f.write(line+'\n')
+     
 
 
 if __name__ == "__main__":
@@ -160,21 +180,29 @@ if __name__ == "__main__":
     
     #Inputs for test rusn
     ep_path_test = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
-    idf_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\ASHRAE901_OfficeMedium_STD2016_NewYork.idf"
-    start_ver_test = "9-0-0"
+    idf_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
+    #start_ver_test = "9-0-0"
     end_ver_test = "9-1-0"
     epw_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\USA_MD_Baltimore-Washington.Intl.AP.724060_TMY3.epw"
+    
     get_weather_files = False
     #stat_file = "add file path"
     
    
-    #Get EPW and STAT file
+    
+   ################################
+       
+    #Get EPW and STAT file if requested
     if get_weather_files == True:
         open_EPW_Weather_url()
     
-    # #Lookup best match
+    # #Lookup best match for climate zone tbd
+    ## to add function to match file idf file
     
-       
+    
+    # Check starting idf ep version    
+    start_ver_test = check_idf_ep_version(idf_file_test)
+    
     #Update IDF File Version from v72 to v91
     print("Updating IDF File")
     update_idf_file(ep_path_test, idf_file_test, start_ver_test, end_ver_test)
