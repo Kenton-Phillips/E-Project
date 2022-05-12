@@ -6,7 +6,7 @@ import subprocess
 import sys
 import os
 import webbrowser
-
+import shutil
 
 
 def check_idf_ep_version(idf_file):
@@ -39,14 +39,71 @@ def get_climate_zone(stat_file):
     """   
     with open(stat_file, 'r') as f:
            lines = f.readlines()
-           
+    
+    # assign value for test
+    climate_zone = "nope"
+    
     for line in lines:
-        if "ASHRAE Standard 196-2006 Climate Zone" in line:
+        #if "ASHRAE Standard 196-2006 Climate Zone" in line:
+         if "Climate type" and "Climate Zone" in line:   
             x = line.index('\"')
             climate_zone = line[x+1:x+3]
             break
     
     return climate_zone
+
+
+def get_shortname_from_stat (stat_file):
+    with open(stat_file, 'r') as f:
+           lines = f.readlines()
+    
+    # assign value for test
+    loc_short_name = "nope"
+    
+    for line in lines:
+        #if "ASHRAE Standard 196-2006 Climate Zone" in line:
+         if "Location --" in line:   
+            x = line.index('--')
+            loc_short_name = line[x+3:len(line)-3]
+            break
+    
+    loc_short_name = loc_short_name.split(" ")[0]
+    
+    return loc_short_name
+
+
+def match_climate_zone_to_city(climate_zone):
+    """ get closest city to climate zone 
+    
+    input climate_zone: ASHRAE climate zone code
+    output: String - city matching climate zone
+    """   
+    
+    climate_dict = {
+        "4B": "Albuquerque",
+        "3A": "Atlanta",
+        "5A": "Buffalo",
+        "5B": "Denver",
+        "0B": "Dubai",
+        "3B": "ElPaso",
+        "8": "Fairbanks",
+        "6B": "GreatFalls",
+        "0A": "HoChiMinh",
+        "1A": "Honolulu",
+        "7": "InternationalFalls",
+        "1B": "NewDelhi",
+        "4A": "NewYork",
+        "5C": "PortAngeles",
+        "6A": "Rochester",
+        "3C": "SanDiego",
+        "4C": "Seattle",
+        "2A": "Tampa",
+        "2B": "Tucson"
+        }
+
+    match_city = climate_dict[climate_zone]
+
+    return match_city
 
 
 def open_EPW_Weather_url():
@@ -178,39 +235,70 @@ if __name__ == "__main__":
     
     print("start")
     
-    #Inputs for test rusn
+    #Inputs not set by user
     ep_path_test = "C:\EnergyPlusV9-1-0\PreProcess\IDFVersionUpdater"
-    idf_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
-    #start_ver_test = "9-0-0"
     end_ver_test = "9-1-0"
-    epw_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\USA_MD_Baltimore-Washington.Intl.AP.724060_TMY3.epw"
-    
     get_weather_files = False
-    #stat_file = "add file path"
+    code_standard = "ASHRAE901"
+    building_type = "OfficeLarge"
+    code_year = "STD2019"
+    idf_repo_dir = "C:\Github\E-Project\IDF_repo\OfficeLarge"
     
-   
     
-   ################################
-       
+    idf_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\RefBldgMediumOfficePre1980_v1.4_7.2_1A_USA_FL_MIAMI.idf"
+    
+    #Inputs set by user
+    epw_file_test = r"C:\Users\kphillip\Desktop\JHU bench mark check\USA_CA_Los.Angeles.Intl.AP.722950_TMY3.epw"
+    stat_file = r"C:\Users\kphillip\Desktop\JHU bench mark check\USA_CA_Los.Angeles.Intl.AP.722950_TMY3.stat"
+    
+    
     #Get EPW and STAT file if requested
     if get_weather_files == True:
         open_EPW_Weather_url()
     
-    # #Lookup best match for climate zone tbd
-    ## to add function to match file idf file
     
+        
+    ###############################
+    climate_zone = get_climate_zone(stat_file) #find climate zone from .stat file
+    best_match_city = match_climate_zone_to_city(climate_zone) #match climate zone to DOE protoype city
     
+    idf_match_file_name = ("{}_{}_{}_{}.idf").format(code_standard,
+                                                     building_type,
+                                                     code_year,
+                                                     best_match_city) #find correct idf file
+    
+    idf_match_file = ("{}\{}").format(idf_repo_dir,idf_match_file_name) #create path for idf file
+    
+    #move copy of idf_match to epw directory
+    epw_file_directory, epw_file_name = os.path.split(epw_file_test)
+    
+    loc_short_name = get_shortname_from_stat(stat_file)
+    print(loc_short_name)
+    
+    destination_idf = str(("{}\{}_{}_{}_{}.idf").format(epw_file_directory,
+                                                        code_standard,
+                                                        building_type,
+                                                        code_year,
+                                                        loc_short_name))
+   
+    src = idf_match_file
+    dst = destination_idf
+    
+    print(src)
+    print(dst)
+    shutil.copyfile(src, dst)
+        
     # Check starting idf ep version    
-    start_ver_test = check_idf_ep_version(idf_file_test)
+    start_ver_test = check_idf_ep_version(destination_idf)
     
-    #Update IDF File Version from v72 to v91
+    # #Update IDF File Version to v91
     print("Updating IDF File")
-    update_idf_file(ep_path_test, idf_file_test, start_ver_test, end_ver_test)
+    update_idf_file(ep_path_test, destination_idf, start_ver_test, end_ver_test)
     print("Updating IDF File - Complete")
     
     #Run IDF File with selected epw file
     print("running IDF File")
-    run_idf_file(idf_file_test, epw_file_test)
+    run_idf_file(destination_idf, epw_file_test)
     print("running IDF File - complete")
     print("end")
 

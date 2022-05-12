@@ -26,33 +26,44 @@ def get_climate_zone(stat_file):
     
     return climate_zone
 
-climate_dict = {
-    "4B": "Albuquerque",
-    "3A": "Atlanta",
-    "5A": "Buffalo",
-    "5B": "Denver",
-    "0B": "Dubai",
-    "3B": "ElPaso",
-    "8": "Fairbanks",
-    "6B": "GreatFalls",
-    "0A": "HoChiMinh",
-    "1A": "Honolulu",
-    "7": "InternationalFalls",
-    "1B": "NewDelhi",
-    "4A": "NewYork",
-    "5C": "PortAngeles",
-    "6A": "Rochester",
-    "3C": "SanDiego",
-    "4C": "Seattle",
-    "2A": "Tampa",
-    "2B": "Tucson"
-    }
+def match_climate_zone_to_city(climate_zone):
+    """ get closest city to climate zone 
+    
+    input climate_zone: ASHRAE climate zone code
+    output: String - city matching climate zone
+    """   
+    
+    climate_dict = {
+        "4B": "Albuquerque",
+        "3A": "Atlanta",
+        "5A": "Buffalo",
+        "5B": "Denver",
+        "0B": "Dubai",
+        "3B": "ElPaso",
+        "8": "Fairbanks",
+        "6B": "GreatFalls",
+        "0A": "HoChiMinh",
+        "1A": "Honolulu",
+        "7": "InternationalFalls",
+        "1B": "NewDelhi",
+        "4A": "NewYork",
+        "5C": "PortAngeles",
+        "6A": "Rochester",
+        "3C": "SanDiego",
+        "4C": "Seattle",
+        "2A": "Tampa",
+        "2B": "Tucson"
+        }
+
+    match_city = climate_dict[climate_zone]
+
+    return match_city
 
 
 stat_file = r"C:\Users\kphillip\Downloads\USA_GA_Marietta-Dobbins.AFB.722270_TMY3\USA_GA_Marietta-Dobbins.AFB.722270_TMY3.stat"
 
 climate_zone = get_climate_zone(stat_file)
-best_match_city = climate_dict[climate_zone]
+best_match_city = match_climate_zone_to_city(climate_zone)
 
 print(climate_zone)
 print(best_match_city)
