@@ -275,12 +275,14 @@ if __name__ == "__main__":
     loc_short_name = get_shortname_from_stat(stat_file)
     print(loc_short_name)
     
+    #create string for destination idf
     destination_idf = str(("{}\{}_{}_{}_{}.idf").format(epw_file_directory,
                                                         code_standard,
                                                         building_type,
                                                         code_year,
                                                         loc_short_name))
    
+    #copy idf file from repo into run folder
     src = idf_match_file
     dst = destination_idf
     
